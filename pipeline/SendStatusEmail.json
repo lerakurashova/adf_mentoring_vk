@@ -1,0 +1,67 @@
+{
+	"name": "SendStatusEmail",
+	"properties": {
+		"activities": [
+			{
+				"name": "WebGet",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": true,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": {
+						"value": "@pipeline().globalParameters.KeyVaultSecretURI",
+						"type": "Expression"
+					},
+					"method": "GET",
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://vault.azure.net"
+					}
+				}
+			},
+			{
+				"name": "WebPost",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "WebGet",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": {
+						"value": "@activity('WebGet').output.value",
+						"type": "Expression"
+					},
+					"method": "POST",
+					"body": {
+						"DataFactoryName": "Data Factory: @{pipeline().DataFactory}",
+						"PipelineRun": "PipelineRun: @{pipeline().RunId}",
+						"PipelineTriggerTime": "Pipeline Trigger Time: @{pipeline().TriggerTime}",
+						"PipelineStatus": "Pipeline Errors: @{variables('PipelineErrors')}",
+						"receiver": "@{pipeline().parameters.receiver}",
+						"subjectString": "Data Factory @{pipeline().DataFactory}: Execution of @{pipeline().Pipeline} has been finished"
+					}
+				}
+			}
+		],
+		"annotations": []
+	}
+}
