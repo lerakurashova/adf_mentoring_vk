@@ -15,6 +15,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
+					"url": "https://mentoring-key-vault-vk1.vault.azure.net/secrets/LogicAppHTTPPOSTURL/9b5c1906529741dd956ea2de4fdaf3c4",
 					"method": "GET",
 					"authentication": {
 						"type": "MSI",
