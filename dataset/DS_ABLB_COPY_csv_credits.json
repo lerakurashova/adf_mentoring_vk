@@ -1,0 +1,48 @@
+{
+	"name": "DS_ABLB_COPY_csv_credits",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ABLB_azurementoringstoragevk1",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"SourceFilename": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "New folder"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().SourceFilename",
+					"type": "Expression"
+				},
+				"container": "movies"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "cast",
+				"type": "String"
+			},
+			{
+				"name": "crew",
+				"type": "String"
+			},
+			{
+				"name": "id",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

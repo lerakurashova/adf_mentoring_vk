@@ -1,0 +1,46 @@
+{
+	"name": "DS_ADLS_SINK_moviesfiles_NEW",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_azurementoringdatalakevk",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"FileName": {
+				"type": "string",
+				"defaultValue": "credits"
+			},
+			"Timestamp": {
+				"type": "string",
+				"defaultValue": "1"
+			},
+			"FileExtension": {
+				"type": "string",
+				"defaultValue": "csv"
+			}
+		},
+		"folder": {
+			"name": "New folder"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@concat(dataset().FileName, '_',formatDateTime(convertTimeZone(dataset().Timestamp,'UTC','W. Europe Standard Time'),'yyyyMMddHHmmss'), '.', dataset().FileExtension) ",
+					"type": "Expression"
+				},
+				"folderPath": "movies",
+				"fileSystem": "raw"
+			},
+			"columnDelimiter": ",",
+			"rowDelimiter": "\n",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

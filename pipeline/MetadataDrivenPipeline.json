@@ -1,0 +1,415 @@
+{
+	"name": "MetadataDrivenPipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "LookuptControlMetadata",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_ASQL_tControlMetadata",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEachFileNameType",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LookuptControlMetadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('LookuptControlMetadata').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "CopyFilestoASQLMovies",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "SetTargetTable",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"additionalColumns": [
+										{
+											"name": "pipelineId",
+											"value": {
+												"value": "@pipeline().RunId",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "source_filename",
+											"value": "$$FILEPATH"
+										}
+									],
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"wildcardFolderPath": {
+											"value": "@item().SourceFolder",
+											"type": "Expression"
+										},
+										"wildcardFileName": {
+											"value": "@item().SourceFileName",
+											"type": "Expression"
+										},
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"preCopyScript": {
+										"value": "@{concat('truncate table ', variables('TargetTable'))}",
+										"type": "Expression"
+									},
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false,
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"dataIntegrationUnits": {
+									"value": "@item().MaxDIU",
+									"type": "Expression"
+								},
+								"translator": {
+									"value": "@json(item().Mapping)",
+									"type": "Expression"
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_ADLS_COPY_raw_movies_metada",
+									"type": "DatasetReference",
+									"parameters": {
+										"SourceContainer": {
+											"value": "@item().SourceContainer",
+											"type": "Expression"
+										},
+										"SourceFolder": {
+											"value": "@item().SourceFolder",
+											"type": "Expression"
+										},
+										"SourceFileName": {
+											"value": "@item().SourceFileName",
+											"type": "Expression"
+										},
+										"SourceColumnDelimiter": {
+											"value": "@item().SourceColumnDelimiter",
+											"type": "Expression"
+										},
+										"SourceEncodingName": {
+											"value": "@item().SourceEncodingName",
+											"type": "Expression"
+										},
+										"SourceEscapeChar": {
+											"value": "@item().SourceEscapeChar",
+											"type": "Expression"
+										},
+										"SourceQuoteChar": {
+											"value": "@item().SourceQuoteChar",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ASQL_STG_movies",
+									"type": "DatasetReference",
+									"parameters": {
+										"SchemaName": {
+											"value": "@item().SchemaName",
+											"type": "Expression"
+										},
+										"TableName": {
+											"value": "@item().TableName",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "SetTargetTable",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "TargetTable",
+								"value": {
+									"value": "@concat(item().SchemaName, '.', item().TableName)",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "WriteLogs",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "CopyFilestoASQLMovies",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spWritePipelineLog]",
+								"storedProcedureParameters": {
+									"pipelinename": {
+										"value": {
+											"value": "@pipeline().Pipeline",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"runid": {
+										"value": {
+											"value": "@pipeline().RunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"activityname": {
+										"value": {
+											"value": "'CopyFilestoASQLMovies'",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"meterType": {
+										"value": {
+											"value": "@activity('CopyFilestoASQLMovies').output.billingReference.billableDuration[0].meterType",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"billableDuration": {
+										"value": {
+											"value": "@activity('CopyFilestoASQLMovies').output.billingReference.billableDuration[0].duration",
+											"type": "Expression"
+										},
+										"type": "Double"
+									},
+									"filesRead": {
+										"value": {
+											"value": "@activity('CopyFilestoASQLMovies').output.filesRead",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"rowsRead": {
+										"value": {
+											"value": "@activity('CopyFilestoASQLMovies').output.rowsRead",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"rowsCopied": {
+										"value": {
+											"value": "@activity('CopyFilestoASQLMovies').output.rowsCopied",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"usedDataIntegrationUnits": {
+										"value": {
+											"value": "@activity('CopyFilestoASQLMovies').output.usedDataIntegrationUnits",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"usedParallelCopies": {
+										"value": {
+											"value": "@activity('CopyFilestoASQLMovies').output.usedParallelCopies",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"executionStart": {
+										"value": {
+											"value": "@activity('CopyFilestoASQLMovies').output.executionDetails[0].start",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"executionStatus": {
+										"value": {
+											"value": "@activity('CopyFilestoASQLMovies').output.executionDetails[0].status",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"queueDuration": {
+										"value": {
+											"value": "@activity('CopyFilestoASQLMovies').output.executionDetails[0].profile.queue.duration",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"transferDuration": {
+										"value": {
+											"value": "@activity('CopyFilestoASQLMovies').output.executionDetails[0].profile.transfer.duration",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"copyDuration": {
+										"value": {
+											"value": "@activity('CopyFilestoASQLMovies').output.executionDetails[0].duration",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_ASQL_movies",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "WriteErrorLogs",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "CopyFilestoASQLMovies",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spWritePipelineErrorLog]",
+								"storedProcedureParameters": {
+									"pipelinename": {
+										"value": {
+											"value": "@pipeline().Pipeline",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"runid": {
+										"value": {
+											"value": "@pipeline().RunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"activityname": {
+										"value": {
+											"value": "'CopyFilestoASQLMovies'",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"ErrorCode": {
+										"value": {
+											"value": "@activity('CopyFilestoASQLMovies').output.errors[0].Code",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"FailureType": {
+										"value": null,
+										"type": "String"
+									},
+									"ErrorMessage": {
+										"value": {
+											"value": "@activity('CopyFilestoASQLMovies').output.errors[0].Message",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"ErrorDT": {
+										"value": {
+											"value": "@activity('CopyFilestoASQLMovies').output.executionDetails[0].start",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_ASQL_movies",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			}
+		],
+		"variables": {
+			"TargetTable": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-06-23T23:04:38Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

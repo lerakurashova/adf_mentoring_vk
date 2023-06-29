@@ -1,0 +1,70 @@
+{
+	"name": "DS_ADLS_COPY_raw_movies_metada",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_azurementoringdatalakevk",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"SourceContainer": {
+				"type": "string"
+			},
+			"SourceFolder": {
+				"type": "string"
+			},
+			"SourceFileName": {
+				"type": "string"
+			},
+			"SourceColumnDelimiter": {
+				"type": "string"
+			},
+			"SourceEncodingName": {
+				"type": "string"
+			},
+			"SourceEscapeChar": {
+				"type": "string"
+			},
+			"SourceQuoteChar": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().SourceFileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().SourceFolder",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().SourceContainer",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": {
+				"value": "@dataset().SourceColumnDelimiter",
+				"type": "Expression"
+			},
+			"encodingName": {
+				"value": "@dataset().SourceEncodingName",
+				"type": "Expression"
+			},
+			"escapeChar": {
+				"value": "@dataset().SourceEscapeChar",
+				"type": "Expression"
+			},
+			"firstRowAsHeader": true,
+			"quoteChar": {
+				"value": "@dataset().SourceQuoteChar",
+				"type": "Expression"
+			}
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

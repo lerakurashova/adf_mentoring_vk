@@ -1,0 +1,17 @@
+{
+	"name": "DS_ASQL_SINK_Movies_STG_online_purchase",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ASQL_movies",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "stg",
+			"table": "online_purchase"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

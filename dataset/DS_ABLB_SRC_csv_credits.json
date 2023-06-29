@@ -1,0 +1,40 @@
+{
+	"name": "DS_ABLB_SRC_csv_credits",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ABLB_azurementoringstoragevk1",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "New folder"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"container": "movies"
+			},
+			"columnDelimiter": ",",
+			"rowDelimiter": "\n",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "cast",
+				"type": "String"
+			},
+			{
+				"name": "crew",
+				"type": "String"
+			},
+			{
+				"name": "id",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

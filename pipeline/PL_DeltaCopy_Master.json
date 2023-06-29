@@ -1,0 +1,63 @@
+{
+	"name": "PL_DeltaCopy_Master",
+	"properties": {
+		"activities": [
+			{
+				"name": "LoadDeltaFiles_LZ",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_MT_LoadDeltaFiles",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "LoadMoviesDB_STG_TG",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "LoadDeltaFiles_LZ",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_MT_Populate_OnlinePurchase_Stage",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "ArchiveProcessed",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "LoadMoviesDB_STG_TG",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_MT_Online_to_Archive",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2023-05-27T14:28:45Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,26 @@
+{
+	"name": "DS_ADLS_SRC_Credits",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_azurementoringdatalakevk",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "credits*.csv",
+				"folderPath": "movies",
+				"fileSystem": "raw"
+			},
+			"columnDelimiter": ",",
+			"rowDelimiter": "\n",
+			"escapeChar": "\"",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

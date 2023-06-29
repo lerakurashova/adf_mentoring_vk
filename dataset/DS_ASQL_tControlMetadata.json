@@ -1,0 +1,17 @@
+{
+	"name": "DS_ASQL_tControlMetadata",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ASQL_movies",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "etl",
+			"table": "tControlMetadata"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

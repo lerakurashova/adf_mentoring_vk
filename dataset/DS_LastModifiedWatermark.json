@@ -1,0 +1,17 @@
+{
+	"name": "DS_LastModifiedWatermark",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ASQL_movies",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "mta_last_modified_watermark"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

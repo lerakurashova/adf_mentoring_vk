@@ -1,0 +1,338 @@
+{
+	"name": "MetadataDrivenPipeline_copy1",
+	"properties": {
+		"activities": [
+			{
+				"name": "LookuptControlMetadata",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "SetPostURL",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_ASQL_tControlMetadata",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEachFileNameType",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LookuptControlMetadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('LookuptControlMetadata').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "CopyFilestoASQLMovies",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "SetTargetTable",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"additionalColumns": [
+										{
+											"name": "pipelineId",
+											"value": {
+												"value": "@pipeline().RunId",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "source_filename",
+											"value": "$$FILEPATH"
+										}
+									],
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"wildcardFolderPath": {
+											"value": "@item().SourceFolder",
+											"type": "Expression"
+										},
+										"wildcardFileName": {
+											"value": "@item().SourceFileName",
+											"type": "Expression"
+										},
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"preCopyScript": {
+										"value": "@{concat('truncate table ', variables('TargetTable'))}",
+										"type": "Expression"
+									},
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false,
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"dataIntegrationUnits": {
+									"value": "@item().MaxDIU",
+									"type": "Expression"
+								},
+								"translator": {
+									"value": "@json(item().Mapping)",
+									"type": "Expression"
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_ADLS_COPY_raw_movies_metada",
+									"type": "DatasetReference",
+									"parameters": {
+										"SourceContainer": {
+											"value": "@item().SourceContainer",
+											"type": "Expression"
+										},
+										"SourceFolder": {
+											"value": "@item().SourceFolder",
+											"type": "Expression"
+										},
+										"SourceFileName": {
+											"value": "@item().SourceFileName",
+											"type": "Expression"
+										},
+										"SourceColumnDelimiter": {
+											"value": "@item().SourceColumnDelimiter",
+											"type": "Expression"
+										},
+										"SourceEncodingName": {
+											"value": "@item().SourceEncodingName",
+											"type": "Expression"
+										},
+										"SourceEscapeChar": {
+											"value": "@item().SourceEscapeChar",
+											"type": "Expression"
+										},
+										"SourceQuoteChar": {
+											"value": "@item().SourceQuoteChar",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ASQL_STG_movies",
+									"type": "DatasetReference",
+									"parameters": {
+										"SchemaName": {
+											"value": "@item().SchemaName",
+											"type": "Expression"
+										},
+										"TableName": {
+											"value": "@item().TableName",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "SetTargetTable",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "TargetTable",
+								"value": {
+									"value": "@concat(item().SchemaName, '.', item().TableName)",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "SetErrors",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "CopyFilestoASQLMovies",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "PipelineErrors",
+								"value": {
+									"value": "@concat('Actitvity Name: CopyFilestoASQLMovies, Error Code: ', activity('CopyFilestoASQLMovies').output.errors[0].Code, ', Error Message: ', activity('CopyFilestoASQLMovies').output.errors[0].Message)",
+									"type": "Expression"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "WebPost",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "ForEachFileNameType",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": {
+						"value": "@variables('HTTPURL')",
+						"type": "Expression"
+					},
+					"method": "POST",
+					"body": {
+						"DataFactoryName": "Data Factory: @{pipeline().DataFactory}",
+						"PipelineRun": "PipelineRun: @{pipeline().RunId}",
+						"PipelineTriggerTime": "Pipeline Trigger Time: @{pipeline().TriggerTime}",
+						"PipelineStatus": "Pipeline Errors: @{variables('PipelineErrors')}",
+						"receiver": "@{pipeline().parameters.receiver}",
+						"subjectString": "Data Factory @{pipeline().DataFactory}: Execution of @{pipeline().Pipeline} has been finished"
+					}
+				}
+			},
+			{
+				"name": "WebGet",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": {
+						"value": "@pipeline().globalParameters.KeyVaultSecretURI",
+						"type": "Expression"
+					},
+					"method": "GET",
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://vault.azure.net"
+					}
+				}
+			},
+			{
+				"name": "SetPostURL",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "WebGet",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "HTTPURL",
+					"value": {
+						"value": "@activity('WebGet').output.value",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"receiver": {
+				"type": "string",
+				"defaultValue": "ger.lkrv@gmail.com"
+			}
+		},
+		"variables": {
+			"TargetTable": {
+				"type": "String"
+			},
+			"PipelineErrors": {
+				"type": "String"
+			},
+			"HTTPURL": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-06-28T13:23:05Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

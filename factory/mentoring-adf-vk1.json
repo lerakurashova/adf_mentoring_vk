@@ -1,0 +1,17 @@
+{
+	"name": "mentoring-adf-vk1",
+	"properties": {
+		"globalParameters": {
+			"KeyVaultSecretURI": {
+				"type": "string",
+				"value": "https://mentoring-key-vault-vk1.vault.azure.net/secrets/LogicAppHTTPPOSTURL/9b5c1906529741dd956ea2de4fdaf3c4?api-version=7.0"
+			}
+		}
+	},
+	"location": "francecentral",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "addddacb-102f-4b54-94cf-e8c52db43a9f",
+		"tenantId": "39e48fa5-6b10-4f56-a6e6-72bbcda23dc6"
+	}
+}

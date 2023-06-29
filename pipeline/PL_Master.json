@@ -1,0 +1,63 @@
+{
+	"name": "PL_Master",
+	"properties": {
+		"activities": [
+			{
+				"name": "Load_Data_Lale",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_MT_Copy_Movies_NEW",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Load_Movies_DB",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Load_Data_Lale",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_MT_Populate_Movies_Stage",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Archive_Processed",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Load_Movies_DB",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_MT_Movies_to_Archive",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2023-05-22T23:38:17Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

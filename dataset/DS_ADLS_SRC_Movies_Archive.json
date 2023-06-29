@@ -1,0 +1,19 @@
+{
+	"name": "DS_ADLS_SRC_Movies_Archive",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_azurementoringdatalakevk",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "movies/archive",
+				"fileSystem": "raw"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

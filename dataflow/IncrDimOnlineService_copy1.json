@@ -1,0 +1,174 @@
+{
+	"name": "IncrDimOnlineService_copy1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_ASQL_movies_tOnlineService",
+						"type": "DatasetReference"
+					},
+					"name": "tOnlineService"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_ASQL_datamart_DimOnlineService",
+						"type": "DatasetReference"
+					},
+					"name": "DimOnlineServicePrev"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_ASQL_datamart_DimOnlineService",
+						"type": "DatasetReference"
+					},
+					"name": "NewOnlineService"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_ASQL_datamart_DimOnlineService",
+						"type": "DatasetReference"
+					},
+					"name": "UpdateDimOnlineService"
+				}
+			],
+			"transformations": [
+				{
+					"name": "HashValuePrev"
+				},
+				{
+					"name": "SelectDimOnlineServiceHash"
+				},
+				{
+					"name": "joinPrev"
+				},
+				{
+					"name": "SelecttOnlineServices"
+				},
+				{
+					"name": "HashValueNew"
+				},
+				{
+					"name": "DimOnlineService"
+				},
+				{
+					"name": "AlterRowInsert"
+				},
+				{
+					"name": "AddCreatedDateModifiedDate"
+				},
+				{
+					"name": "CompareHash"
+				},
+				{
+					"name": "AlterRowUpdate"
+				},
+				{
+					"name": "AddModifiedDate"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          ServiceId as integer,",
+				"          ServiceCode as string,",
+				"          ServiceName as string,",
+				"          CreatedDate as timestamp,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> tOnlineService",
+				"source(output(",
+				"          ServiceKey as integer,",
+				"          ServiceCode as string,",
+				"          ServiceName as string,",
+				"          CreatedDate as timestamp,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DimOnlineServicePrev",
+				"DimOnlineServicePrev derive(hashvalue_prev = md5(5, ServiceName)) ~> HashValuePrev",
+				"HashValuePrev select(mapColumn(",
+				"          ServiceCode,",
+				"          hashvalue_prev",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectDimOnlineServiceHash",
+				"tOnlineService, SelectDimOnlineServiceHash join(tOnlineService@ServiceCode == SelectDimOnlineServiceHash@ServiceCode,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joinPrev",
+				"joinPrev select(mapColumn(",
+				"          ServiceCode = tOnlineService@ServiceCode,",
+				"          ServiceName,",
+				"          hashvalue_prev",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelecttOnlineServices",
+				"SelecttOnlineServices derive(hashvalue_new = md5(5, ServiceName)) ~> HashValueNew",
+				"CompareHash split(isNull(comparecol),",
+				"     isNull(comparecol) == false(),",
+				"     disjoint: true) ~> DimOnlineService@(New, Existing, Skip)",
+				"DimOnlineService@New alterRow(insertIf(true())) ~> AlterRowInsert",
+				"AlterRowInsert derive(ModifiedDate = currentUTC(),",
+				"          CreatedDate = currentUTC()) ~> AddCreatedDateModifiedDate",
+				"HashValueNew derive(comparecol = compare(hashvalue_new, hashvalue_prev)) ~> CompareHash",
+				"DimOnlineService@Existing alterRow(updateIf(comparecol!=0)) ~> AlterRowUpdate",
+				"AlterRowUpdate derive(ModifiedDate = currentUTC()) ~> AddModifiedDate",
+				"AddCreatedDateModifiedDate sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ServiceKey as integer,",
+				"          ServiceCode as string,",
+				"          ServiceName as string,",
+				"          CreatedDate as timestamp,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          ServiceCode,",
+				"          ServiceName,",
+				"          CreatedDate,",
+				"          ModifiedDate",
+				"     )) ~> NewOnlineService",
+				"AddModifiedDate sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ServiceKey as integer,",
+				"          ServiceCode as string,",
+				"          ServiceName as string,",
+				"          CreatedDate as timestamp,",
+				"          ModifiedDate as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['ServiceCode'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          ServiceCode,",
+				"          ServiceName,",
+				"          ModifiedDate",
+				"     )) ~> UpdateDimOnlineService"
+			]
+		}
+	}
+}

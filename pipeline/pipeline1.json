@@ -1,0 +1,41 @@
+{
+	"name": "pipeline1",
+	"properties": {
+		"activities": [
+			{
+				"name": "Web1",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://prod-02.francecentral.logic.azure.com:443/workflows/63bda88f9b6b438f9e1e118f2c54620a/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Kxcl4o1zbYYJgFVMfd7l10OJS3I-dDu_rYCpBY9RXFc",
+					"method": "POST",
+					"body": {
+						"message": "This is a custom dynamic message from your Data Factory @{pipeline().DataFactory}. Pipeline with run ID @{pipeline().RunId} has status @{activity('CopyFilestoASQLMovies').output.executionDetails[0].status for Activity CopyFilestoASQLMovies. The pipeline has the following errors: @{activity('CopyFilestoASQLMovies').output.errors[0].Message}",
+						"dataFactoryName": "@{pipeline().DataFactory}",
+						"pipelineName": "@{pipeline().Pipeline}",
+						"pipelineStatus": "@{activity('CopyFilestoASQLMovies').output.executionDetails[0].status}",
+						"receiver": "@{pipeline().parameters.receiver}",
+						"errorMessage": "@{activity('CopyFilestoASQLMovies').output.errors[0].Message}"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"receiver": {
+				"type": "string",
+				"defaultValue": "ger.lkrv@gmail.com"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-06-23T23:04:38Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

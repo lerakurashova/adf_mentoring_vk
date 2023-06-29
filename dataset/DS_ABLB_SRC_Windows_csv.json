@@ -1,0 +1,40 @@
+{
+	"name": "DS_ABLB_SRC_Windows_csv",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ABLB_azurementoringstoragevk1",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"FileName": {
+				"type": "string",
+				"defaultValue": "ratings"
+			},
+			"Timestamp": {
+				"type": "string",
+				"defaultValue": "1"
+			},
+			"FileExtension": {
+				"type": "string",
+				"defaultValue": "csv"
+			}
+		},
+		"folder": {
+			"name": "New folder"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"container": "movies"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

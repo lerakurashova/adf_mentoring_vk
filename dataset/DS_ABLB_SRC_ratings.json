@@ -1,0 +1,26 @@
+{
+	"name": "DS_ABLB_SRC_ratings",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ABLB_azurementoringstoragevk1",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "New folder"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"container": "movies"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

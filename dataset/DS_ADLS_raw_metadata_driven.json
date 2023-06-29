@@ -1,0 +1,33 @@
+{
+	"name": "DS_ADLS_raw_metadata_driven",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_azurementoringdatalakevk",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"FileName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().FileName",
+					"type": "Expression"
+				},
+				"folderPath": "metadata-driven",
+				"fileSystem": "raw"
+			},
+			"columnDelimiter": "|",
+			"escapeChar": "\"",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
