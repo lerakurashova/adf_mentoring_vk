@@ -15,10 +15,6 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"url": {
-						"value": "@pipeline().globalParameters.KeyVaultSecretURI",
-						"type": "Expression"
-					},
 					"method": "GET",
 					"authentication": {
 						"type": "MSI",
